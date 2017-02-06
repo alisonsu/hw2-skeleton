@@ -146,9 +146,12 @@ def cluster_by_partitioning(active_sites, k):
     M, C = kMedoids(matrix,k)
     # Make labels from kmedoids into list: each index = active site, value is cluster
     labels = np.zeros(len(active_sites))
-    print(active_sites)
-    for cluster, value in C.items():
-        labels[value] = cluster  
+    for c, value in C.items():
+        labels[value] = c
+              
+    # Compute silhouette score
+    sil = metrics.silhouette_score(matrix, labels, metric='euclidean')
+    print("Silhouette score for partition clustering:",sil)
     
     # Sort label list to be in same order as active_site_list   
     label_list = []    
@@ -276,6 +279,7 @@ def cluster_hierarchically(active_sites, n):
         label_list.append(labels_cuttree[active_sites.index(site)])
     # Calculate Silhouette score:
     sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='euclidean')
+    print("Silhouette score for hierarchical clustering:",sil_cuttree)
     
     cluster_dict = {}
     for index, lbl in enumerate(label_list):
@@ -284,8 +288,6 @@ def cluster_hierarchically(active_sites, n):
         except KeyError:
             cluster_dict[lbl] = []
         cluster_dict[lbl].append(index)  
-    
-    print("Silhouette score for hierarchical clustering:",sil_cuttree)
     
     # Separate active site scores into 3 lists for plotting
     charged_c = []
