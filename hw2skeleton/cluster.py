@@ -150,8 +150,9 @@ def cluster_by_partitioning(active_sites, k):
         labels[value] = c
               
     # Compute silhouette score
-    sil = metrics.silhouette_score(matrix, labels, metric='euclidean')
-    print("Silhouette score for partition clustering:",sil)
+    if len(active_sites) > 3:
+          sil = metrics.silhouette_score(matrix, labels, metric='euclidean')
+          print("Silhouette score for partition clustering:",sil)
     
     # Sort label list to be in same order as active_site_list   
     label_list = []    
@@ -278,8 +279,9 @@ def cluster_hierarchically(active_sites, n):
     for site in active_site_list:
         label_list.append(labels_cuttree[active_sites.index(site)])
     # Calculate Silhouette score:
-    sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='euclidean')
-    print("Silhouette score for hierarchical clustering:",sil_cuttree)
+    if len(active_sites) > 3:
+        sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='euclidean')
+        print("Silhouette score for hierarchical clustering:",sil_cuttree)
     
     cluster_dict = {}
     for index, lbl in enumerate(label_list):
@@ -302,14 +304,14 @@ def cluster_hierarchically(active_sites, n):
     color_map = {0:'r',1:'b',2:'c',3:'m',4:'k'}   
     label_color = [color_map[l] for l in label_list]
     
-    # Plot dataset with clusters colored according to kmedoids output
-    fig = plt.figure(2)
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(charged_c, polar_c, nonpolar_c, c=label_color)
-    ax.set_xlabel('Charged score')
-    ax.set_ylabel('Polar score')
-    ax.set_zlabel('Nonpolar score')
-    plt.show()  
+    # Plot dataset with clusters colored according to hac output
+    #fig = plt.figure(2)
+    #ax = fig.add_subplot(111, projection='3d')
+    #ax.scatter(charged_c, polar_c, nonpolar_c, c=label_color)
+    #ax.set_xlabel('Charged score')
+    #ax.set_ylabel('Polar score')
+    #ax.set_zlabel('Nonpolar score')
+    #plt.show()  
 
     return (cluster_dict)
     
