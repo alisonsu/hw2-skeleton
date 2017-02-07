@@ -62,7 +62,7 @@ def linkage(y, method='single', metric='euclidean'):
 
 def fast_linkage(double[:] dists, int n, int method):
     """
-    This function implements the clustering. See comments below for details.
+    This function implements the agglomerative clustering. See comments below for details.
     Simple comments from GitHub were included, but I elaborated quite a bit and included my own
     """
     # Initialize variables 
@@ -104,15 +104,16 @@ def fast_linkage(double[:] dists, int n, int method):
         # looks more reliable. The idea that we should find the two closest
         # clusters in no more that n - k (1 for the last iteration) distance
         # updates.
+        # This loop finds a current pair of closest nodes
         for i in range(n - k):
             # Find the minimum distance pair from queue and store values
             pair = min_dist_heap.get_min()
             x, dist = pair.key, pair.value
             y = neighbor[x]
-
+            # Verify that pair found are the closest nodes
             if dist == D[condensed_index(n, x, y)]:
                 break
-            #recalculate nearest neighbors
+            #If they were not, recalculate nearest neighbors
             pair = find_min_dist(n, D, size, x)
             y, dist = pair.key, pair.value
             neighbor[x] = y
@@ -145,7 +146,7 @@ def fast_linkage(double[:] dists, int n, int method):
             if nz == 0 or z == y:
                 continue
             # This is where each distance in the pairwise distance matrix is updated
-            # For my code, this is by linking centroids (see function cdef_double_centroid)
+            # For my code using the centroid-linkage algorithm, this is by recalculating the distance between centroids of clusters (see function cdef_double_centroid)
             D[condensed_index(n, z, y)] = new_dist(
                 D[condensed_index(n, z, x)], D[condensed_index(n, z, y)],
                 dist, nx, ny, nz)
