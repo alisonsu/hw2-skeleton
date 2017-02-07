@@ -80,7 +80,7 @@ for index,name in enumerate(names):
         labels_cuttree = []
         for value in cuttree:
             labels_cuttree.append(int(value))
-        sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='euclidean')
+        sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='precomputed')
         sil_cuttree_list.append(sil_cuttree)
     # print number of clusters and max silhouette score for each type of hac for writeup
     print((sil_cuttree_list.index(max(sil_cuttree_list))+2),max(sil_cuttree_list))
@@ -90,7 +90,8 @@ for index,name in enumerate(names):
     plt.legend(loc='lower right')
     plt.xlabel('Number of clusters by cutting dendrogram')
     plt.ylabel('Silhouette score')
-    plt.show
+plt.show()
+    
 
 # Partition clustering: Kmediods. Run 100 times over a range of k values and calculate 
 # mean and stdev silhouette scores at each k value to determine optimum k for ultimate
@@ -98,10 +99,10 @@ for index,name in enumerate(names):
 sil_list = []
 mean_sil_list = []
 std_sil_list = []
-for n in range(2, 50):
+for n in range(2, 20):
     mean_sil=float
     std_sil = float
-    for x in range(100):
+    for x in range(50):
         sil = 0
         M, C = cluster.kMedoids(matrix,n)
         # Convert dictionary output from kMedoids to list of labels indexed by active site
@@ -109,7 +110,7 @@ for n in range(2, 50):
         for c, value in C.items():
             labels[value] = c
         # Compute silhoutte score
-        sil = metrics.silhouette_score(matrix, labels, metric='euclidean')
+        sil = metrics.silhouette_score(matrix, labels, metric='precomputed')
         sil_list.append(sil)
     mean_sil = np.mean(sil_list)
     std_sil = np.std(sil_list)
@@ -117,10 +118,10 @@ for n in range(2, 50):
     std_sil_list.append(std_sil)
     print(mean_sil, n) # print mean silhouette values so can find max for writeup
 plt.figure(7)
-plt.errorbar(range(2,50),mean_sil_list,std_sil_list) 
+plt.errorbar(range(2,20),mean_sil_list,std_sil_list) 
 plt.ylim([0,1])
 plt.title("K_medoid silhouette plot")
 plt.xlabel("Number of clusters (k)")
 plt.ylabel("Silhouette score")
 plt.savefig('K_medoid silhouette plot')
-plt.show
+plt.show()
