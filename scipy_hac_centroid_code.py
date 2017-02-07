@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 This includes the most important code used from the scipy.cluster.hierarchical
-package to demonstrate understanding of the implementation
+package to demonstrate my understanding of the implementation
 
 The code was obtained from:
 https://github.com/scipy/scipy/blob/master/scipy/cluster/hierarchy.py
 https://github.com/scipy/scipy/blob/master/scipy/cluster/_hierarchy.pyx
 https://github.com/scipy/scipy/blob/master/scipy/cluster/_hierarchy_distance_update.pxi
+
+Note: the other methods use a function that uses nearest-neighbor chain algorithm.
+I am only showing the code for hac.centroid, which is the algorithm I ultimately
+implemented
 """
     
 def centroid(y):
@@ -59,7 +63,7 @@ def linkage(y, method='single', metric='euclidean'):
 def fast_linkage(double[:] dists, int n, int method):
     """
     This function implements implements the clustering. See comments below for details.
-    Simple omments from GitHub are included, but I elaborated quite a bit
+    Simple comments from GitHub are included, but I elaborated quite a bit
     """
     # Initialize variables 
     cdef double[:, :] Z = np.empty((n - 1, 4))
@@ -86,7 +90,7 @@ def fast_linkage(double[:] dists, int n, int method):
     cdef double dist
     cdef Pair pair
 
-    # For each active site, find the closest active site to it and store inde of active site
+    # For each active site, find the closest active site to it and store index of active site
     # and distance in min_dist queue
     for x in range(n - 1):
         pair = find_min_dist(n, D, size, x)
@@ -108,7 +112,7 @@ def fast_linkage(double[:] dists, int n, int method):
 
             if dist == D[condensed_index(n, x, y)]:
                 break
-
+            #recalculate nearest neighbors
             pair = find_min_dist(n, D, size, x)
             y, dist = pair.key, pair.value
             neighbor[x] = y
@@ -126,14 +130,13 @@ def fast_linkage(double[:] dists, int n, int method):
             id_x, id_y = id_y, id_x
         
         # Put information of which clusters joined together, what their distance was,
-        # and how many active sites were joined by mergine the clusters
+        # and how many active sites were joined by merging the clusters
         Z[k, 0] = id_x 
         Z[k, 1] = id_y
         Z[k, 2] = dist
         Z[k, 3] = nx + ny
-
         size[x] = 0  # Cluster x will be dropped.
-        size[y] = nx + ny  # Cluster y will be replaced with the new cluster.
+        size[y] = nx + ny  # Cluster y will be replaced with the newly merged
         cluster_id[y] = n + k  # Update ID of y.
 
         # Update the distance matrix.
@@ -142,7 +145,7 @@ def fast_linkage(double[:] dists, int n, int method):
             if nz == 0 or z == y:
                 continue
             # This is where each distance in the pairwise distance matrix is updated
-            # For my code, this is by linking centroids
+            # For my code, this is by linking centroids (see function cdef_double_centroid)
             D[condensed_index(n, z, y)] = new_dist(
                 D[condensed_index(n, z, x)], D[condensed_index(n, z, y)],
                 dist, nx, ny, nz)
@@ -165,7 +168,7 @@ def fast_linkage(double[:] dists, int n, int method):
                 min_dist[z] = dist
                 min_dist_heap.change_value(z, dist)
 
-        # Find nearest neighbor for y.
+        # Find nearest neighbor for y and update min_dist and min_dist_heap (queue)
         if y < n - 1:
             pair = find_min_dist(n, D, size, y)
             z, dist = pair.key, pair.value
@@ -174,7 +177,7 @@ def fast_linkage(double[:] dists, int n, int method):
                 min_dist[y] = dist
                 min_dist_heap.change_value(y, dist)
 
-    return Z.base
+    return Z.base # returns stepwise dendrogram
 
 """
 Below is the code for calculating the distance between centroids of clusters used
@@ -186,3 +189,62 @@ cdef double _centroid(double d_xi, double d_yi, double d_xy,
                  (size_x * size_y * d_xy * d_xy) / (size_x + size_y)) /
                 (size_x + size_y))
 
+    
+def cut_tree(Z, n_clusters=None, height=None):
+    """
+    Given a linkage matrix Z, return the cut tree.
+    Parameters
+    ----------
+    Z : scipy.cluster.linkage array
+        The linkage matrix.
+    n_clusters : array_like, optional
+        Number of clusters in the tree at the cut point.
+    height : array_like, optional
+        The height at which to cut the tree.  Only possible for ultrametric
+        trees.
+    Returns
+    -------
+    cutree : array
+        An array indicating group membership at each agglomeration step.  I.e.,
+        for a full cut tree, in the first column each data point is in its own
+        cluster.  At the next step, two nodes are merged.  Finally all singleton
+        and non-singleton clusters are in one group.  If `n_clusters` or
+        `height` is given, the columns correspond to the columns of `n_clusters` or
+        `height`.
+    """
+    nobs = num_obs_linkage(Z) # This simply counts the total observations from input matrix M, which is 136 for the active site example
+    nodes = _order_cluster_tree(Z) # This creates a list of nodes from the bottom up
+
+    if height is not None and n_clusters is not None:
+        raise ValueError("At least one of either height or n_clusters "
+                         "must be None")
+    elif height is None and n_clusters is None:  # return the full cut tree
+        cols_idx = np.arange(nobs)
+    elif height is not None:
+        heights = np.array([x.dist for x in nodes])
+        cols_idx = np.searchsorted(heights, height)
+    else: # this is what I use by specifying n_clusters-calculates number of columns will need: 136-8 = 128
+        cols_idx = nobs - np.searchsorted(np.arange(nobs), n_clusters)
+
+    try:
+        n_cols = len(cols_idx)
+    except TypeError:  # scalar
+        n_cols = 1
+        cols_idx = np.array([cols_idx])
+    # Initialize array to store cluster ID for each active sites
+    groups = np.zeros((n_cols, nobs), dtype=int)
+    last_group = np.arange(nobs)
+    if 0 in cols_idx:
+        groups[0] = last_group
+    
+    # This iterates over the list of nodes until the number assigned to each leaf node corresponds to its cluster number
+    for i, node in enumerate(nodes):
+        idx = node.pre_order() # performs preorder transversal of tree from node (root, then left, then right)
+        this_group = last_group.copy()
+        this_group[idx] = last_group[idx].min()
+        this_group[this_group > last_group[idx].max()] -= 1
+        if i + 1 in cols_idx:
+            groups[np.where(i + 1 == cols_idx)[0]] = this_group
+        last_group = this_group
+
+    return groups.T #this is a list indexed by each active site containing which cluster it belongs to
