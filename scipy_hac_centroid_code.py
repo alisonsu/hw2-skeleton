@@ -62,8 +62,8 @@ def linkage(y, method='single', metric='euclidean'):
 
 def fast_linkage(double[:] dists, int n, int method):
     """
-    This function implements implements the clustering. See comments below for details.
-    Simple comments from GitHub are included, but I elaborated quite a bit
+    This function implements the clustering. See comments below for details.
+    Simple comments from GitHub were included, but I elaborated quite a bit and included my own
     """
     # Initialize variables 
     cdef double[:, :] Z = np.empty((n - 1, 4))
@@ -239,7 +239,7 @@ def cut_tree(Z, n_clusters=None, height=None):
     
     # This iterates over the list of nodes until the number assigned to each leaf node corresponds to its cluster number
     for i, node in enumerate(nodes):
-        idx = node.pre_order() # performs preorder transversal of tree from node (root, then left, then right)
+        idx = node.pre_order() # performs preorder transversal of tree from node (root, then left, then right), returns leaf nodes
         this_group = last_group.copy()
         this_group[idx] = last_group[idx].min()
         this_group[this_group > last_group[idx].max()] -= 1
@@ -247,4 +247,4 @@ def cut_tree(Z, n_clusters=None, height=None):
             groups[np.where(i + 1 == cols_idx)[0]] = this_group
         last_group = this_group
 
-    return groups.T #this is a list indexed by each active site containing which cluster it belongs to
+    return groups.T #this is a list indexed by each active site containing which cluster it belongs to at cuttoff 
