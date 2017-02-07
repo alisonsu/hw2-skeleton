@@ -187,7 +187,7 @@ def cluster_by_partitioning(active_sites, k):
 def kMedoids(D, k, tmax=100):
     """
     Obtained from: https://github.com/letiantian/kmedoids/blob/master/kmedoids.py
-    Implementation of kmedoids partitioning algorithm
+    Implementation of kmedoids partitioning algorithme
     """
     # determine dimensions of distance matrix D
     m, n = D.shape
@@ -280,7 +280,7 @@ def cluster_hierarchically(active_sites, n):
         label_list.append(labels_cuttree[active_sites.index(site)])
     # Calculate Silhouette score:
     if len(active_sites) > 3:
-        sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='euclidean')
+        sil_cuttree = metrics.silhouette_score(matrix, labels_cuttree, metric='precomputed')
         print("Silhouette score for hierarchical clustering:",sil_cuttree)
     
     cluster_dict = {}
@@ -301,17 +301,18 @@ def cluster_hierarchically(active_sites, n):
         nonpolar_c.append(score[2])
     
     # Generate color map for plotting each cluster a different color
-    color_map = {0:'r',1:'b',2:'c',3:'m',4:'k'}   
+    color_map = {0:'r',1:'b',2:'c',3:'m',4:'k',5:'g',6:'y',7:'w'}   
     label_color = [color_map[l] for l in label_list]
     
     # Plot dataset with clusters colored according to hac output
-    #fig = plt.figure(2)
-    #ax = fig.add_subplot(111, projection='3d')
-    #ax.scatter(charged_c, polar_c, nonpolar_c, c=label_color)
-    #ax.set_xlabel('Charged score')
-    #ax.set_ylabel('Polar score')
-    #ax.set_zlabel('Nonpolar score')
-    #plt.show()  
+    fig = plt.figure(2)
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(charged_c, polar_c, nonpolar_c, c=label_color)
+    ax.set_xlabel('Charged score')
+    ax.set_ylabel('Polar score')
+    ax.set_zlabel('Nonpolar score')
+    plt.show()
+    plt.savefig('Hac clustering')
 
     return (cluster_dict)
     
