@@ -61,7 +61,7 @@ def silhouette_score(X, labels, metric='euclidean', sample_size=None,
            <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
     """
     
-    # The main point of this code is to calculate the mean silhouette score
+    # The main point of this function is to calculate the mean silhouette score
     # of the entire clustering after calculating each individual silhouette score
     # for each sample in each cluster (ie for each active site)
     if sample_size is not None:
@@ -141,7 +141,7 @@ def silhouette_samples(X, labels, metric='euclidean', **kwds):
     for curr_label in range(len(unique_labels)):
 
         # Find inter_clust_dist for all samples belonging to the same
-        # label.
+        # label (cluster).
         mask = labels == curr_label #mask = all active sites in cluster indexed by label
         current_distances = distances[mask] # take a submatrix of distances that involve active sites within the cluster
 
@@ -151,8 +151,8 @@ def silhouette_samples(X, labels, metric='euclidean', **kwds):
             intra_clust_dists[mask] = np.sum(
                 current_distances[:, mask], axis=1) / n_samples_curr_lab # calculate the mean distance of each active site in the cluster
 
-        # Now iterate over all other labels, finding the mean
-        # cluster distance that is closest to every sample.
+        # Now iterate over all other labels (clusters), finding the mean
+        # inter-cluster distance, and save distance of closest neighboring cluster
         for other_label in range(len(unique_labels)):
             if other_label != curr_label:
                 other_mask = labels == other_label
@@ -160,7 +160,7 @@ def silhouette_samples(X, labels, metric='euclidean', **kwds):
                     current_distances[:, other_mask], axis=1)
                 inter_clust_dists[mask] = np.minimum(
                     inter_clust_dists[mask], other_distances)
-    # This is now the definition of a silhouette score where all necessary parts have now been calculated
+    # This is the definition of a silhouette score where all necessary parts have now been calculated
     sil_samples = inter_clust_dists - intra_clust_dists
     sil_samples /= np.maximum(intra_clust_dists, inter_clust_dists)
     # score 0 for clusters of size 1, according to the paper
