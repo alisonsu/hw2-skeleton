@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # Some quick stuff to make sure the program is called correctly
 if len(sys.argv) < 4:
-    print("Usage: python -m hw2skeleton [-P| -H] <pdb directory> <output file>")
+    print("Usage: python -m hw2skeleton [-P| [-H] <pdb directory> <output file>")
     sys.exit(0)
 
 active_sites = read_active_sites(sys.argv[2])
@@ -13,11 +13,11 @@ active_sites = read_active_sites(sys.argv[2])
 # Choose clustering algorithm
 if sys.argv[1][0:2] == '-P':
     print("Clustering using Partitioning method")
-    medoids, clustering = cluster_by_partitioning(active_sites,5)
+    medoids, clustering = cluster_by_partitioning(active_sites,3)
     print("Finished clustering")
     write_clustering(sys.argv[3], clustering)
 
 if sys.argv[1][0:2] == '-H':
     print("Clustering using hierarchical method")
-    clusterings = cluster_hierarchically(active_sites, 5)
+    clusterings = cluster_hierarchically(active_sites, 8)
     write_clustering(sys.argv[3], clusterings)
