@@ -40,7 +40,7 @@ def test_partition_clustering():
 def test_partition_clustering_simple():
 
 
-    X = np.array([[0,0,0], [0,1,0], [0,0,1], [100,100,100], [100,110,100]])
+    X = np.array([[0,0,0], [0,1,0], [0,0,1], [500,500,500], [500,501,500]])
     matrix = np.zeros([len(X), len(X)])    
     for i in range(len(X)):
         for j in range(len(X)):
@@ -53,26 +53,31 @@ def test_partition_clustering_simple():
 
     
     answer = np.array([0, 0, 0, 1, 1])
-        
-    # update this assertion
+    
     assert np.all(labels == answer)
 
 def test_hierarchical_clustering():
-    # tractable subset
     pdb_ids = [276, 4629, 10701]
 
     active_sites = []
     for id in pdb_ids:
         filepath = os.path.join("data", "%i.pdb"%id)
         active_sites.append(io.read_active_site(filepath))
+    cluster_dict = cluster.cluster_hierarchically(active_sites,3)
+    
+    labels = []
+    for key, value in cluster_dict.items():
+        for v in value:
+            labels.append(v)
+    labels = sorted(labels)
+    answer = [0,1,2]
 
-    # update this assertion
-    # assert cluster.cluster_hierarchically(active_sites,3) == []
+    assert np.all(labels == answer)
    
 def test_hierarchical_clustering_simple():
 
 
-    X = np.array([[0,0,0], [0,1,0], [0,0,1], [100,100,100], [100,110,100]])
+    X = np.array([[0,0,0], [0,1,0], [0,0,1], [500,500,500], [500,501,500]])
     matrix = np.zeros([len(X), len(X)])    
     for i in range(len(X)):
         for j in range(len(X)):
